@@ -10,12 +10,13 @@ public class Policesystem {
     // 1. DATABASE CONFIGURATION
     static final String DB_URL = "jdbc:mysql://localhost:3306/police_db";
     static final String USER = "root"; 
-    static final String PASS = "password"; // Change this to your MySQL password
+    static final String PASS = "root"; // Change this to your MySQL password
 
     static Scanner scanner = new Scanner(System.in);
     static String currentUser = null;
     static String currentRole = null;
     public static void main(String[] args) {
+        
         System.out.println("--- NEXT-GEN LAW ENFORCEMENT SYSTEM ---");
         
         while (true) {
@@ -127,5 +128,28 @@ public class Policesystem {
     private static void reviewWarrants() {
         System.out.println("Checking pending FIRs for warrants...");
         // Magistrate logic to update 'warrant_approved' column
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS)) {
+        String sql = "SELECT id, details, status FROM complaints WHERE status = 'PENDING'";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery();
+
+        while (rs.next()) {
+            System.out.println("Complaint ID: " + rs.getInt("id") +
+                               " | Details: " + rs.getString("details") +
+                               " | Status: " + rs.getString("status"));
+        }
+
+        System.out.print("Enter Complaint ID to approve warrant: ");
+        int id = scanner.nextInt();
+
+        String updateSql = "UPDATE complaints SET status = 'WARRANT_APPROVED' WHERE id = ?";
+        PreparedStatement updatePstmt = conn.prepareStatement(updateSql);
+        updatePstmt.setInt(1, id);
+        updatePstmt.executeUpdate();
+
+        System.out.println("Warrant approved for Complaint ID: " + id);
+    } catch (SQLException e) {
+        System.out.println("Error: " + e.getMessage());
+    }
     }
 }
